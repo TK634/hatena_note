@@ -6,6 +6,7 @@
 import "dotenv/config";
 import { generateArticle } from "./generate.js";
 import { postToHatena } from "./post-hatena.js";
+import { postToNote } from "./post-note.js";
 import { postToWordPress } from "./post-wordpress.js";
 import { postToTwitter } from "./post-twitter.js";
 import { postToThreads } from "./post-threads.js";
@@ -27,6 +28,12 @@ async function runGenre(genre: (typeof GENRES)[0]): Promise<PostResult> {
     // はてなブログ（必須）
     console.log(`🚀 はてなブログに投稿中...`);
     const hatenaUrl = await postToHatena(article, genre);
+
+    // note.com
+    console.log(`📓 note.com に投稿中...`);
+    await postToNote(article).catch((e) =>
+      console.error(`   note投稿エラー（続行）: ${e.message}`)
+    );
 
     // WordPress（設定済みの場合）
     await postToWordPress(article, genre).catch((e) =>

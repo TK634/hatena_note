@@ -1,5 +1,9 @@
 .env
 node_modules/
 articles/
+scripts/
+ogp/
 post-log.json
 cron.log
+dashboard.html
+.note-session.json

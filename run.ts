@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { generateArticle } from "./generate.js";
 import { postToHatena } from "./post-hatena.js";
+import { postToNote } from "./post-note.js";
 import { postToTwitter } from "./post-twitter.js";
 import { postToThreads } from "./post-threads.js";
 import { sendSummaryEmail } from "./notify.js";
@@ -36,14 +37,19 @@ async function main() {
     console.log(`\n🚀 Step 2: はてなブログに投稿中...`);
     const url = await postToHatena(article, genre);
 
+    console.log(`\n📓 Step 3: note.com に投稿中...`);
+    await postToNote(article).catch((e) =>
+      console.error("note投稿エラー（続行）:", e.message)
+    );
+
     if (process.env.TWITTER_API_KEY) {
-      console.log(`\n🐦 Step 3: Xに投稿中...`);
+      console.log(`\n🐦 Step 4: Xに投稿中...`);
       await postToTwitter(article, url, genre.twitterHashtags).catch((e) =>
         console.error("X投稿エラー（続行）:", e.message)
       );
     }
 
-    console.log(`\n🧵 Step 4: Threadsに投稿中...`);
+    console.log(`\n🧵 Step 5: Threadsに投稿中...`);
     await postToThreads(article, url, genre.twitterHashtags).catch((e) =>
       console.error("Threads投稿エラー（続行）:", e.message)
     );
