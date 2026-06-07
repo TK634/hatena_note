@@ -77,7 +77,18 @@ ${affiliateHints}
 }
 
 export async function generateArticle(genre: Genre, customTopic?: string): Promise<Article> {
-  const topic = customTopic ?? getTopicForGenre(genre);
+  let topic = customTopic ?? null;
+
+  // トレンドトピックを優先（30%の確率 or 明示的に指定）
+  if (!topic) {
+    try {
+      const { getTrendTopicForGenre } = await import("./trend-topics.js");
+      const trendTopic = await getTrendTopicForGenre(genre);
+      topic = trendTopic ?? getTopicForGenre(genre);
+    } catch {
+      topic = getTopicForGenre(genre);
+    }
+  }
 
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
@@ -105,6 +116,12 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
 
   // アフィリエイトセクションを末尾に追加
   article.content += buildAffiliateSection(genre);
+
+  // 同ジャンルの過去記事への内部リンクを追加
+  try {
+    const { appendInternalLinks } = await import("./internal-links.js");
+    Object.assign(article, appendInternalLinks(article));
+  } catch { /* post-log.json が空の初回は無視 */ }
 
   // OGP画像を生成
   try {

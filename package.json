@@ -4,9 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "generate": "npx tsx generate.ts",
     "post": "npx tsx run.ts",
-    "test-generate": "npx tsx generate.ts"
+    "post:all": "npx tsx run-all.ts",
+    "generate": "npx tsx generate.ts",
+    "stats": "npx tsx stats.ts",
+    "dashboard": "npx tsx dashboard.ts && open dashboard.html",
+    "trends": "npx tsx trend-topics.ts",
+    "youtube": "npx tsx youtube-script.ts",
+    "setup-cron": "bash setup-cron.sh"
   },
   "keywords": [],
   "author": "",
