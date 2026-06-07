@@ -2,11 +2,12 @@ import "dotenv/config";
 import { generateArticle } from "./generate.js";
 import { postToHatena } from "./post-hatena.js";
 import { postToTwitter } from "./post-twitter.js";
+import { postToThreads } from "./post-threads.js";
+import { sendSummaryEmail } from "./notify.js";
 import { GENRES, getGenreById } from "./genres.js";
 import * as fs from "fs";
 
 async function main() {
-  // 引数でジャンル指定: npx tsx run.ts invest
   const genreId = process.argv[2] ?? "invest";
   const genre = getGenreById(genreId);
   if (!genre) {
@@ -42,6 +43,11 @@ async function main() {
       );
     }
 
+    console.log(`\n🧵 Step 4: Threadsに投稿中...`);
+    await postToThreads(article, url, genre.twitterHashtags).catch((e) =>
+      console.error("Threads投稿エラー（続行）:", e.message)
+    );
+
     const log = {
       date: new Date().toISOString(),
       genreId: genre.id,
@@ -56,8 +62,16 @@ async function main() {
 
     console.log(`\n🎉 完了！`);
     console.log(`   URL: ${url}`);
+
+    await sendSummaryEmail([
+      { genreId: genre.id, genreName: genre.name, success: true, title: article.title, url },
+    ]).catch(() => {});
   } catch (err) {
-    console.error("❌ エラーが発生しました:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("❌ エラーが発生しました:", msg);
+    await sendSummaryEmail([
+      { genreId: genre.id, genreName: genre.name, success: false, error: msg },
+    ]).catch(() => {});
     process.exit(1);
   }
 }

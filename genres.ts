@@ -181,6 +181,63 @@ export const GENRES: Genre[] = [
     targetReader: "20〜40代の転職を検討している会社員",
     twitterHashtags: ["転職", "キャリア", "年収アップ", "転職活動", "就職"],
   },
+
+  {
+    id: "health",
+    name: "健康・ダイエット",
+    topics: [
+      "3ヶ月で10kg痩せた糖質制限ダイエットの正しいやり方【完全版】",
+      "有酸素運動vs筋トレ どちらが痩せやすい？科学的な答え",
+      "睡眠の質を上げる7つの習慣【疲れが取れない人へ】",
+      "プロテインの選び方と飲むタイミング【筋トレ初心者向け】",
+      "間欠的ファスティング（16:8）で内臓脂肪を落とす方法",
+      "ジムに行かずに自宅で腹筋を割る3ヶ月プログラム",
+      "腸活で痩せ体質になる食事法【腸内フローラを整える食品15選】",
+      "40代からの筋トレが絶対必要な理由【筋肉量と基礎代謝の関係】",
+      "ランニング初心者が3ヶ月でハーフマラソンを完走する練習法",
+      "糖質制限中に食べていいもの・ダメなもの完全リスト",
+      "メンタルヘルスを整える5つの生活習慣【ストレス社会を生き抜く】",
+      "プランクを毎日やり続けた30日間の体の変化【写真付き記録】",
+      "タンパク質を食事から効率よく摂る方法【鶏胸肉以外の選択肢】",
+      "骨盤矯正で姿勢が変わる！自宅でできるストレッチ10選",
+      "ビタミンDサプリは本当に必要か？効果と正しい摂り方",
+      "コレステロールが高い人が食事で改善する方法【医師監修】",
+      "脂肪燃焼に効く食材トップ10【スーパーで買える身近な食品】",
+      "更年期太りを防ぐ食事と運動【40〜50代女性向け】",
+      "デスクワーク族の腰痛を自分で治すストレッチ【今日からできる】",
+      "スムージーダイエットの正しいやり方と続けるためのレシピ集",
+    ],
+    affiliateLinks: {
+      サプリ・プロテイン: {
+        マイプロテイン: "https://px.a8.net/svt/ejp?a8mat=REPLACE_MYPROTEIN",
+        DNS: "https://px.a8.net/svt/ejp?a8mat=REPLACE_DNS",
+        ビーレジェンド: "https://px.a8.net/svt/ejp?a8mat=REPLACE_BLEGEND",
+      },
+      フィットネス器具: {
+        Amazonスポーツ: "https://www.amazon.co.jp/s?k=フィットネス&tag=REPLACE-22",
+      },
+      フィットネスアプリ: {
+        ライザップ: "https://px.a8.net/svt/ejp?a8mat=REPLACE_RIZAP",
+        ティップネスオンライン: "https://px.a8.net/svt/ejp?a8mat=REPLACE_TIPNESS",
+      },
+      健康本: {
+        運動脳: "https://www.amazon.co.jp/dp/4763140698/?tag=REPLACE-22",
+        シリコンバレー式超ファスティング: "https://www.amazon.co.jp/dp/4763138391/?tag=REPLACE-22",
+      },
+      宅食・食事管理: {
+        ナッシュ: "https://px.a8.net/svt/ejp?a8mat=REPLACE_NOSH",
+        マッスルデリ: "https://px.a8.net/svt/ejp?a8mat=REPLACE_MUSCLEDELI",
+      },
+    },
+    blog: {
+      type: "hatena",
+      hatenaEmail: process.env.HATENA_EMAIL_HEALTH ?? "",
+      hatenaUrl: process.env.BLOG_URL_HEALTH ?? "https://takataka634-health.hatenablog.com/",
+    },
+    writerPersona: "管理栄養士・パーソナルトレーナーの資格を持つ健康ライター。500名以上のダイエット指導実績がある",
+    targetReader: "20〜50代のダイエット・健康維持に関心がある男女",
+    twitterHashtags: ["ダイエット", "健康", "筋トレ", "痩せる", "糖質制限"],
+  },
 ];
 
 export function getGenreById(id: string): Genre | undefined {

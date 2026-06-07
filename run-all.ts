@@ -7,10 +7,12 @@ import "dotenv/config";
 import { generateArticle } from "./generate.js";
 import { postToHatena } from "./post-hatena.js";
 import { postToTwitter } from "./post-twitter.js";
+import { postToThreads } from "./post-threads.js";
+import { sendSummaryEmail, type PostResult } from "./notify.js";
 import { GENRES } from "./genres.js";
 import * as fs from "fs";
 
-async function runGenre(genre: (typeof GENRES)[0]) {
+async function runGenre(genre: (typeof GENRES)[0]): Promise<PostResult> {
   console.log(`\n${"=".repeat(50)}`);
   console.log(`▶ ジャンル: ${genre.name} (${genre.id})`);
   console.log(`${"=".repeat(50)}`);
@@ -30,6 +32,11 @@ async function runGenre(genre: (typeof GENRES)[0]) {
       );
     }
 
+    console.log(`🧵 Threadsに投稿中...`);
+    await postToThreads(article, url, genre.twitterHashtags).catch((e) =>
+      console.error(`   Threads投稿エラー（続行）: ${e.message}`)
+    );
+
     const log = {
       date: new Date().toISOString(),
       genreId: genre.id,
@@ -43,11 +50,11 @@ async function runGenre(genre: (typeof GENRES)[0]) {
     fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
 
     console.log(`✅ 完了: ${url}`);
-    return { genreId: genre.id, success: true, url };
+    return { genreId: genre.id, genreName: genre.name, success: true, title: article.title, url };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`❌ エラー [${genre.name}]: ${msg}`);
-    return { genreId: genre.id, success: false, error: msg };
+    return { genreId: genre.id, genreName: genre.name, success: false, error: msg };
   }
 }
 
@@ -66,11 +73,10 @@ async function main() {
   console.log(`\n対象ジャンル: ${targets.map((g) => g.name).join(", ")}`);
   if (skipIds.length > 0) console.log(`スキップ: ${skipIds.join(", ")}`);
 
-  const results = [];
+  const results: PostResult[] = [];
   for (const genre of targets) {
     const result = await runGenre(genre);
     results.push(result);
-    // ジャンル間は30秒待機（API制限・スパム対策）
     if (genre !== targets[targets.length - 1]) {
       console.log(`\n⏳ 次のジャンルまで30秒待機...`);
       await new Promise((r) => setTimeout(r, 30_000));
@@ -82,10 +88,15 @@ async function main() {
   console.log(`${"=".repeat(50)}`);
   for (const r of results) {
     const icon = r.success ? "✅" : "❌";
-    console.log(`${icon} ${r.genreId}: ${r.success ? r.url : r.error}`);
+    console.log(`${icon} ${r.genreName}: ${r.success ? r.url : r.error}`);
   }
   const successCount = results.filter((r) => r.success).length;
   console.log(`\n合計: ${successCount}/${results.length} 成功`);
+
+  // 結果をメールで通知
+  await sendSummaryEmail(results).catch((e) =>
+    console.error(`メール通知エラー（続行）: ${e.message}`)
+  );
 }
 
 main().catch(console.error);

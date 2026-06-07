@@ -10,19 +10,22 @@ echo "現在のcrontabをクリア（auto-income関連のみ）..."
 crontab -l 2>/dev/null | grep -v "auto-income" | crontab -
 
 # ジャンルごとに投稿時刻をずらす
-# 投資・節約: 毎朝9:00
+# 投資・節約:       毎朝 9:00
 # 副業・フリーランス: 毎朝10:00
-# 転職・キャリア: 毎朝11:00
-CRON_INVEST="0 9 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts invest >> $LOG_FILE 2>&1"
-CRON_SIDE="0 10 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts side-hustle >> $LOG_FILE 2>&1"
-CRON_CAREER="0 11 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts career >> $LOG_FILE 2>&1"
+# 転職・キャリア:    毎朝11:00
+# 健康・ダイエット:  毎朝12:00
+CRON_INVEST="0 9 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts invest >> $LOG_FILE 2>&1 # auto-income"
+CRON_SIDE="0 10 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts side-hustle >> $LOG_FILE 2>&1 # auto-income"
+CRON_CAREER="0 11 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts career >> $LOG_FILE 2>&1 # auto-income"
+CRON_HEALTH="0 12 * * * cd $SCRIPT_DIR && $NODE_BIN $TSX run.ts health >> $LOG_FILE 2>&1 # auto-income"
 
-(crontab -l 2>/dev/null; echo "$CRON_INVEST"; echo "$CRON_SIDE"; echo "$CRON_CAREER") | crontab -
+(crontab -l 2>/dev/null; echo "$CRON_INVEST"; echo "$CRON_SIDE"; echo "$CRON_CAREER"; echo "$CRON_HEALTH") | crontab -
 
 echo "✅ cronを設定しました:"
 echo "   09:00 - 投資・節約"
 echo "   10:00 - 副業・フリーランス"
 echo "   11:00 - 転職・キャリア"
+echo "   12:00 - 健康・ダイエット"
 echo ""
 echo "確認: crontab -l"
 echo "ログ: tail -f $LOG_FILE"
