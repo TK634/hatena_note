@@ -1,0 +1,26 @@
+{
+  "name": "auto-income",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "generate": "npx tsx generate.ts",
+    "post": "npx tsx run.ts",
+    "test-generate": "npx tsx generate.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.102.0",
+    "@types/nodemailer": "^8.0.0",
+    "dotenv": "^17.4.2",
+    "nodemailer": "^8.0.10",
+    "playwright": "^1.60.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3"
+  }
+}

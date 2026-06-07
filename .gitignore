@@ -1,0 +1,5 @@
+.env
+node_modules/
+articles/
+post-log.json
+cron.log
