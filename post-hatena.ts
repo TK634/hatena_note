@@ -21,7 +21,7 @@ export async function postToHatena(article: Article, genre: Genre): Promise<stri
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: hatenaEmail,
-    subject: article.title,
+    subject: `[${genre.name}]${article.title}`,
     html: htmlContent,
   });
 

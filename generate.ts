@@ -34,13 +34,16 @@ function buildPrompt(genre: Genre, topic: string): string {
     .map(([cat, links]) => `- ${cat}の話題 → ${Object.keys(links).join("・")}への言及`)
     .join("\n");
 
+  const currentYear = new Date().getFullYear();
+
   return `あなたは${genre.writerPersona}です。
 以下のテーマで、はてなブログに投稿するための高品質なSEO記事を書いてください。
+※現在は${currentYear}年です。年号が必要な箇所は必ず${currentYear}年と記載してください。
 
 テーマ: ${topic}
 
 【SEO要件】
-- タイトル: 検索意図に合致した32文字以内のキャッチーなタイトル（数字・メリット・年度を含める）
+- タイトル: 検索意図に合致した32文字以内のキャッチーなタイトル（数字・メリット・${currentYear}年を含める）
 - 見出し（h2/h3）: キーワードを自然に含める
 - 冒頭100文字: 記事の価値を明示してユーザーを引き込む
 - 本文にLSIキーワード（関連語）を自然に散りばめる
