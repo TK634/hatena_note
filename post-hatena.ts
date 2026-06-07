@@ -1,9 +1,13 @@
 import type { Article } from "./generate.js";
+import type { Genre } from "./genres.js";
 import nodemailer from "nodemailer";
 
-const HATENA_POST_EMAIL = "hzeefh2u4h.z5vbahlsjcgn6@blog.hatena.ne.jp";
+export async function postToHatena(article: Article, genre: Genre): Promise<string> {
+  const hatenaEmail = genre.blog.hatenaEmail;
+  if (!hatenaEmail) {
+    throw new Error(`ジャンル「${genre.name}」のはてな投稿メールが .env に設定されていません`);
+  }
 
-export async function postToHatena(article: Article): Promise<string> {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -16,14 +20,13 @@ export async function postToHatena(article: Article): Promise<string> {
 
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
-    to: HATENA_POST_EMAIL,
+    to: hatenaEmail,
     subject: article.title,
     html: htmlContent,
   });
 
-  const blogUrl = "https://takataka634.hatenablog.com/";
-  console.log(`✅ はてなブログにメール投稿完了`);
-  return blogUrl;
+  console.log(`   ✅ はてなブログに投稿完了: ${genre.blog.hatenaUrl}`);
+  return genre.blog.hatenaUrl;
 }
 
 function convertMarkdownToHtml(md: string): string {
