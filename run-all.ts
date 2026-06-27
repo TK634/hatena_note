@@ -12,6 +12,7 @@ import { postToTwitter } from "./post-twitter.js";
 import { postToThreads } from "./post-threads.js";
 import { postToInstagram } from "./post-instagram.js";
 import { sendSummaryEmail, type PostResult } from "./notify.js";
+import { resolveArticleUrls } from "./resolve-urls.js";
 import { GENRES } from "./genres.js";
 import * as fs from "fs";
 
@@ -99,6 +100,12 @@ async function main() {
 
   console.log(`\n対象ジャンル: ${targets.map((g) => g.name).join(", ")}`);
   if (skipIds.length > 0) console.log(`スキップ: ${skipIds.join(", ")}`);
+
+  // 前回までに投稿した記事の実URLをRSSから取得してログを補正（内部リンク用）
+  console.log(`\n🔗 過去記事のURLを補正中...`);
+  await resolveArticleUrls().catch((e) =>
+    console.error(`   URL補正エラー（続行）: ${e.message}`)
+  );
 
   const results: PostResult[] = [];
   for (const genre of targets) {

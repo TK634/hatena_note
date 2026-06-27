@@ -12,11 +12,25 @@ export interface Article {
   ogpImagePath?: string;
 }
 
+// 未設定（REPLACE_を含む）のアフィリリンクは壊れたリンクになるので除外する
+function isValidLink(url: string): boolean {
+  return !url.includes("REPLACE_");
+}
+
 function buildAffiliateSection(genre: Genre): string {
+  const validCategories = Object.entries(genre.affiliateLinks)
+    .map(([category, links]) => {
+      const valid = Object.entries(links).filter(([, url]) => isValidLink(url));
+      return [category, valid] as const;
+    })
+    .filter(([, valid]) => valid.length > 0);
+
+  if (validCategories.length === 0) return ""; // 有効リンクが無ければセクションごと出さない
+
   let section = "\n\n---\n\n## おすすめリソース\n\n";
-  for (const [category, links] of Object.entries(genre.affiliateLinks)) {
+  for (const [category, links] of validCategories) {
     section += `### ${category}\n`;
-    for (const [name, url] of Object.entries(links)) {
+    for (const [name, url] of links) {
       section += `- [${name}](${url})\n`;
     }
     section += "\n";
@@ -25,53 +39,59 @@ function buildAffiliateSection(genre: Genre): string {
 }
 
 function buildPrompt(genre: Genre, topic: string): string {
-  // アフィリエイト商品を本文中に自然に挿入するためのヒント
-  const affiliateProducts = Object.entries(genre.affiliateLinks)
-    .flatMap(([cat, links]) => Object.keys(links).map((name) => `「${name}」（${cat}）`))
-    .join("、");
+  // 有効な（REPLACE_を含まない）アフィリエイト商品だけを本文挿入対象にする
+  const validProducts = Object.entries(genre.affiliateLinks)
+    .flatMap(([cat, links]) =>
+      Object.entries(links)
+        .filter(([, url]) => isValidLink(url))
+        .map(([name]) => `「${name}」（${cat}）`)
+    );
 
-  const affiliateHints = Object.entries(genre.affiliateLinks)
-    .map(([cat, links]) => `- ${cat}の話題 → ${Object.keys(links).join("・")}への言及`)
-    .join("\n");
+  const affiliateBlock =
+    validProducts.length > 0
+      ? `【商品の自然な言及】
+本文の自然な流れの中（比較・紹介・体験談部分）で、以下の商品に2〜3箇所だけ触れてください。宣伝臭くせず、「自分はこれを使っている／比較した結果これを選んだ」という体験ベースで書くこと。リンクは付けず名前だけ出せば十分です（リンクはシステムが後で付けます）。
+対象商品: ${validProducts.join("、")}`
+      : `【商品の言及について】
+今回は紹介できる具体的な商品リンクが未設定のため、特定サービスへの誘導は書かないでください。一般名詞（「ネット証券」「格安SIM」など）で説明し、固有のサービス名でのおすすめや比較は避けてください。`;
 
   const currentYear = new Date().getFullYear();
 
-  return `あなたは${genre.writerPersona}です。
-以下のテーマで、はてなブログに投稿するための高品質なSEO記事を書いてください。
-※現在は${currentYear}年です。年号が必要な箇所は必ず${currentYear}年と記載してください。
+  return `あなたは${genre.writerPersona}として、自分の実体験を交えてブログ記事を書きます。
+※現在は${currentYear}年です。年号が必要な箇所は${currentYear}年と書いてください。
 
 テーマ: ${topic}
+想定読者: ${genre.targetReader}
 
-【SEO要件】
-- タイトル: 検索意図に合致した32文字以内のキャッチーなタイトル（数字・メリット・${currentYear}年を含める）
-- 見出し（h2/h3）: キーワードを自然に含める
-- 冒頭100文字: 記事の価値を明示してユーザーを引き込む
-- 本文にLSIキーワード（関連語）を自然に散りばめる
-- 内部リンクを促す「関連記事」セクションを末尾に1つ設ける
+【最重要：リアリティと独自性】
+読者は「AIが書いた一般論」を一瞬で見抜いて離脱します。以下を必ず守ってください。
+- 一人称（私／筆者）で、具体的なエピソードを最低2つ入れる。例：「最初の3ヶ月は○○で失敗した」「実際にやってみて△△円かかった」など、数字・期間・固有の状況を伴うリアルな描写。
+- 抽象論ではなく「いつ・いくら・どうなったか」を必ず数字で書く。
+- メリットだけでなく、デメリットや後悔・注意点も正直に書く（信頼性が上がる）。
+- よくある反論や「自分には無理かも」という読者の不安に先回りして答える。
 
-【記事要件】
-- 文字数: 2500〜3500文字（SEOは文字数が多いほど有利）
-- 読者: ${genre.targetReader}
-- 文体: 親しみやすく、信頼感のある専門的なトーン
-- 構成:
-  1. 冒頭フック（読者の悩みに共感する1〜2段落）+ この記事でわかること（箇条書き3〜5点）
-  2. 本文（h2見出し付きで4〜6セクション、必要に応じてh3も使う）
-  3. 比較表（| 項目 | A | B |形式のマークダウン表）を1〜2個含める
-  4. まとめ・次のアクション
+【絶対に使わない表現（AIっぽさの元）】
+「いかがでしたか」「この記事では」「まとめると」「ぜひ参考にしてみてください」「〜と言えるでしょう」の多用、中身のない一般論。これらは禁止。
 
-【アフィリエイト挿入ルール】
-本文の自然な流れの中（比較・紹介・まとめ部分）に以下の商品を1〜3箇所リンク付きで言及すること:
-対象商品: ${affiliateProducts}
+【SEO構造】
+- タイトル: 検索意図に合う32文字以内。狙うキーワードを前half に置き、数字や${currentYear}年を含める。
+- 冒頭100文字に、検索キーワードと「この記事を読むと何が解決するか」を明示。
+- h2見出しにキーワードと関連語（共起語）を自然に含める。
+- 記事の途中か末尾に「よくある質問」セクションを作り、Q&Aを3つ入れる（Googleの強調スニペット対策）。各回答は2〜3文で簡潔に。
+- 比較や手順がある所はマークダウンの表（| 項目 | A | B |）または番号付きリストで整理する。
 
-挿入箇所のヒント:
-${affiliateHints}
+【記事構成】
+1. 冒頭：読者の悩みへの共感＋自分の体験の一言＋この記事でわかること（箇条書き3〜5点）
+2. 本文：h2見出し4〜6セクション。体験エピソード・具体的数字・表を織り込む。
+3. よくある質問（Q&A 3つ）
+4. まとめ：きれいごとでなく、結局どうするのが良いかを自分の意見として言い切る。
 
-【重要な指示】
-- 具体的な数字・事例・計算式を積極的に使う（一行で完結させる）
-- 「〜すべき」より「〜するとよい」など柔らかい表現を使う
-- マークダウン形式で書く（はてなブログ対応）
+【その他】
+- 文字数2500〜3500文字。
+- マークダウン形式（はてなブログ対応）。
+- ${affiliateBlock}
 
-以下のJSON形式で返してください（contentは改行を\\nでエスケープしないこと）:
+以下のJSON形式のみで返してください。コードブロック（\`\`\`）は使わず、JSONのみ出力すること:
 {
   "title": "記事タイトル（32文字以内）",
   "content": "記事本文（マークダウン）",
@@ -101,7 +121,8 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const cleaned = text.replace(/```json/g, "").replace(/```/g, "");
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     console.error("API応答（先頭200文字）:", text.slice(0, 200));
     throw new Error("記事の生成に失敗しました");

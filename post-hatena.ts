@@ -1,6 +1,7 @@
 import type { Article } from "./generate.js";
 import type { Genre } from "./genres.js";
 import nodemailer from "nodemailer";
+import * as fs from "fs";
 
 export async function postToHatena(article: Article, genre: Genre): Promise<string> {
   const hatenaEmail = genre.blog.hatenaEmail;
@@ -18,11 +19,21 @@ export async function postToHatena(article: Article, genre: Genre): Promise<stri
 
   const htmlContent = convertMarkdownToHtml(article.content);
 
+  // OGP画像があればメールに添付（はてなのメール投稿は添付画像を記事冒頭に表示する）
+  const attachments =
+    article.ogpImagePath && fs.existsSync(article.ogpImagePath)
+      ? [{ filename: "eyecatch.png", path: article.ogpImagePath }]
+      : [];
+  if (attachments.length === 0) {
+    console.warn(`   ⚠ アイキャッチ画像なしで投稿`);
+  }
+
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: hatenaEmail,
     subject: `[${genre.name}]${article.title}`,
     html: htmlContent,
+    attachments,
   });
 
   console.log(`   ✅ はてなブログに投稿完了: ${genre.blog.hatenaUrl}`);

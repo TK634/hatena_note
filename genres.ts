@@ -378,6 +378,7 @@ export const GENRES: Genre[] = [
         外為どっとコム: "https://px.a8.net/svt/ejp?a8mat=REPLACE_GAITAME",
         SBI_FXトレード: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SBI_FX",
         XM: "https://px.a8.net/svt/ejp?a8mat=REPLACE_XM",
+        DMM_CFD: "https://px.a8.net/svt/ejp?a8mat=4B5R02+1JDC1E+1WP2+NYHDT",
       },
       クレジットカード: {
         三井住友カードNL: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SMC_NL",

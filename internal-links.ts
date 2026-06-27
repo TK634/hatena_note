@@ -18,9 +18,15 @@ export function appendInternalLinks(article: Article): Article {
 
   const logs: LogEntry[] = JSON.parse(fs.readFileSync(logFile, "utf-8"));
 
-  // 同ジャンルの最新5記事（現在の記事は除く）
+  // 個別記事URL（/entry/ を含む）を持つものだけ対象にする。
+  // トップページURLのままの記事をリンクすると全部トップに飛んでしまうため除外。
   const related = logs
-    .filter((l) => l.genreId === article.genreId && l.title !== article.title)
+    .filter(
+      (l) =>
+        l.genreId === article.genreId &&
+        l.title !== article.title &&
+        l.url.includes("/entry/")
+    )
     .slice(-5)
     .reverse();
 
