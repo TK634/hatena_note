@@ -1,6 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as fs from "fs";
 import { type Genre, GENRES, getTopicForGenre } from "./genres.js";
+import { hasBudgetLeft, recordUsage, getMonthlySpend, MONTHLY_BUDGET_USD } from "./cost-guard.js";
+
+export class BudgetExceededError extends Error {
+  constructor() {
+    super(
+      `今月のAPI予算（$${MONTHLY_BUDGET_USD}）に達したため生成を停止しました（現在 $${getMonthlySpend().toFixed(2)}）。来月1日に自動リセットされます。`
+    );
+    this.name = "BudgetExceededError";
+  }
+}
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -100,6 +110,11 @@ function buildPrompt(genre: Genre, topic: string): string {
 }
 
 export async function generateArticle(genre: Genre, customTopic?: string): Promise<Article> {
+  // 月の予算チェック（$5を超えないための安全装置）
+  if (!hasBudgetLeft()) {
+    throw new BudgetExceededError();
+  }
+
   let topic = customTopic ?? null;
 
   // トレンドトピックを優先（30%の確率 or 明示的に指定）
@@ -118,6 +133,10 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
     max_tokens: 8192,
     messages: [{ role: "user", content: buildPrompt(genre, topic) }],
   });
+
+  // 実トークン数から課金額を積算（月の予算管理用）
+  const monthTotal = recordUsage(response.usage);
+  console.log(`   💰 今月の利用額: $${monthTotal.toFixed(3)} / $${MONTHLY_BUDGET_USD}`);
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
 

@@ -13,6 +13,7 @@ import { postToThreads } from "./post-threads.js";
 import { postToInstagram } from "./post-instagram.js";
 import { sendSummaryEmail, type PostResult } from "./notify.js";
 import { resolveArticleUrls } from "./resolve-urls.js";
+import { hasBudgetLeft, getMonthlySpend, MONTHLY_BUDGET_USD } from "./cost-guard.js";
 import { GENRES } from "./genres.js";
 import * as fs from "fs";
 
@@ -109,6 +110,13 @@ async function main() {
 
   const results: PostResult[] = [];
   for (const genre of targets) {
+    // 月の予算チェック（$5を超えないための安全装置）
+    if (!hasBudgetLeft()) {
+      console.log(
+        `\n🛑 今月のAPI予算 $${MONTHLY_BUDGET_USD} に到達（現在 $${getMonthlySpend().toFixed(2)}）。残りジャンルはスキップします。`
+      );
+      break;
+    }
     const result = await runGenre(genre);
     results.push(result);
     if (genre !== targets[targets.length - 1]) {
