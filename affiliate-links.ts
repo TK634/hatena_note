@@ -20,11 +20,14 @@ export const LINKS = {
   楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得
 
+  // ===== 申請中（2026-07-03 提携申請済み・承認待ち） =====
+  松井証券iDeCo: PENDING,     // 新規口座開設申込 500円・審査あり
+  三井住友カードNL: PENDING,  // 審査あり
+
   // ===== 未提携（承認され次第リンクを貼る） =====
   楽天証券: PENDING,
   SBI証券: PENDING,
   楽天カード: PENDING,
-  三井住友カードNL: PENDING,
   楽天プレミアムカード: PENDING,
   PayPayカード: PENDING,
   マネーフォワードME: PENDING,

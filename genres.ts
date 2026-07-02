@@ -52,6 +52,7 @@ export const GENRES: Genre[] = [
         楽天証券: LINKS.楽天証券,
         SBI証券: LINKS.SBI証券,
         松井証券: LINKS.松井証券,
+        松井証券のiDeCo: LINKS.松井証券iDeCo,
       },
       クレジットカード: {
         楽天カード: LINKS.楽天カード,
