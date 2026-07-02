@@ -1,43 +1,51 @@
 # auto-income — ブログ自動投稿・アフィリエイト収益化システム
 
-Claude AI で記事を生成し、複数ジャンル・複数ブログへ毎日自動投稿するシステム。  
-**目標: 月収1000万円達成まで機能拡張を続ける。**
+Claude AI で記事を生成し、はてなブログへ毎日自動投稿するシステム。
+「AI量産」ではなく、**体験談ベース・ロングテールSEO・高単価アフィリ**に絞った構成。
+
+- 投稿先: https://takataka634.hatenablog.com/
+- 実行環境: macOS の launchd で毎朝9:00に `run-all.ts` を自動実行
+- 月間APIコスト: 約$2.7（予算ガードで$4.5を超えると自動停止）
 
 ---
 
-## 方針・ロードマップ
+## 現在のジャンル（3つに集約）
 
-### フェーズ1: 複数ジャンル展開（対応中）
-- [x] 投資・節約ブログ（はてなブログ）
-- [x] 副業・フリーランスブログ（genres.ts 定義済み・はてな新規作成で即使用可）
-- [x] 転職・キャリアブログ（genres.ts 定義済み）
-- [x] 健康・ダイエットブログ（genres.ts 定義済み）
+| ジャンルID | ジャンル名 | 狙い | 主な収益源 |
+|-----------|-----------|------|-----------|
+| `invest` | 新NISA・証券の手続き | 「移管・設定変更」など具体的手続きのロングテール | 証券口座（高単価） |
+| `fx-credit` | クレカ・FX・保険の比較 | 実際に申し込んだ体験ベースの比較 | FX・クレカ（最高単価） |
+| `emergency` | 住まいの緊急トラブル | 「今困っている人」向けの超ロングテール実体験 | 業者紹介（生活110番等） |
 
-### フェーズ2: アフィリエイト収益最大化（着手中）
-- [ ] A8.net / もしもアフィリエイト に登録して genres.ts の REPLACE_XXXXX を実リンクに変更
-- [ ] Amazon アソシエイトのタグを genres.ts の REPLACE-22 に設定
-- [ ] 金融系高単価案件の記事を優先的に生成（証券口座・FX・保険）
-- [ ] 記事内アフィリエイトリンクのA/Bテスト（CTR計測）
+広いキーワード（例:「NISA おすすめ」）は大手に勝てないため捨て、
+「楽天証券からSBIへNISA移管する手順」のような**具体的な状況・手続き**だけを狙う。
 
-### フェーズ3: SNS多チャンネル自動投稿（実装済み/予定）
-- [x] X(Twitter) 自動投稿（`post-twitter.ts`）
-- [x] note.com 自動投稿（`post-note.ts`）
-- [x] Threads 自動投稿（`post-threads.ts` ※APIトークン設定要）
-- [ ] Instagram リール（テキスト→画像スライド生成）
-- [ ] YouTube Shorts（TTS + スライド動画生成）
-- [ ] LINE公式アカウント配信
+---
 
-### フェーズ4: 記事品質・SEO強化
-- [ ] キーワードリサーチ自動化（検索ボリューム取得）
-- [ ] 記事ごとにOGP画像を自動生成（SNS拡散力アップ）
-- [ ] 内部リンク自動挿入（同ジャンル記事間）
-- [ ] 記事公開後のパフォーマンス計測・フィードバックループ
+## 記事品質の設計（generate.ts のプロンプト）
 
-### フェーズ5: スケールアップ
-- [ ] 1日1記事 → 1日3記事/ジャンル（朝・昼・夜）
-- [ ] WordPress マルチサイト展開（独自ドメインでSEO強化）
-- [ ] メルマガ・LINE公式アカウントとの連携
-- [ ] 外注ライターへのAIサポートで記事量産
+- **体験談ベース**: 一人称・具体的な金額・期間・失敗談を必ず含める
+- **感情訴求**: 読者の感情の言語化・感情込みの失敗描写。ただし「絶対」「必ず」等の煽りは禁止（YMYL評価・広告審査対策）
+- **事実ガードレール**: 制度・税率など公式な数字は断定せず公式サイト確認へ誘導（誤情報対策）
+- **SEO構造**: Q&Aセクション（強調スニペット対策）・比較表・共起語入り見出し
+- **リンク安全**: 未設定のアフィリリンク（`REPLACE_`）は出力されない
+
+---
+
+## 仕組み
+
+```
+毎朝9:00 (launchd)
+  └─ run.sh → run-all.ts
+       ├─ resolve-urls.ts   … RSSから過去記事の実URLを取得してログ補正（内部リンク用）
+       ├─ ジャンルごとに:
+       │    ├─ generate.ts  … Claude Haiku で記事生成（予算ガード付き）
+       │    ├─ ogp.ts       … アイキャッチ画像を自動生成
+       │    ├─ post-hatena.ts … メール投稿（画像添付＝記事冒頭に表示）
+       │    └─ post-twitter.ts 等 … SNS投稿（APIキー設定時のみ）
+       ├─ cost-guard.ts     … 月$4.5到達で残りジャンルを自動スキップ
+       └─ notify.ts         … 実行結果をメールで通知
+```
 
 ---
 
@@ -45,20 +53,24 @@ Claude AI で記事を生成し、複数ジャンル・複数ブログへ毎日�
 
 ```
 auto-income/
-├── genres.ts          # ジャンル定義（トピック・アフィリエイト・ブログ設定）
-├── generate.ts        # Claude AI で記事生成
-├── post-hatena.ts     # はてなブログにメール投稿
-├── post-note.ts       # note.com に Playwright で投稿
-├── post-twitter.ts    # X(Twitter) に投稿
-├── post-threads.ts    # Threads(Meta) に投稿
-├── notify.ts          # 投稿結果をメールで通知
-├── stats.ts           # 投稿統計・収益予測を表示
+├── genres.ts          # ジャンル定義（トピック・アフィリリンク・ペルソナ）
+├── generate.ts        # Claude AI で記事生成（品質プロンプト・予算チェック）
+├── cost-guard.ts      # 月間API利用額の積算と予算ガード（上限$4.5）
+├── resolve-urls.ts    # はてなRSSから実記事URLを取得しpost-log.jsonを補正
+├── internal-links.ts  # 同ジャンル過去記事への内部リンク挿入（実URLのみ）
+├── ogp.ts             # アイキャッチ画像生成（SVG→PNG）
+├── post-hatena.ts     # はてなブログにメール投稿（画像添付対応）
+├── post-twitter.ts    # X(Twitter) 投稿（任意）
+├── post-note.ts / post-threads.ts / post-wordpress.ts / post-instagram.ts  # 任意
+├── notify.ts          # 投稿結果メール通知
 ├── run.ts             # 単ジャンル実行: npx tsx run.ts [genreId]
-├── run-all.ts         # 全ジャンル一括実行
-├── setup-cron.sh      # cron 設定（各ジャンルを時間差で自動投稿）
-├── articles/          # 生成した記事のローカル保存（ジャンル別サブフォルダ）
-├── post-log.json      # 投稿履歴ログ
-└── .env               # APIキー等（.gitignore で除外）
+├── run-all.ts         # 全ジャンル一括実行（毎朝の本番エントリ）
+├── run.sh             # launchd から呼ばれるラッパー
+├── stats.ts           # 投稿統計
+├── articles/          # 生成記事のローカル保存（gitignore）
+├── post-log.json      # 投稿履歴（gitignore）
+├── cost-log.json      # 月別API利用額（gitignore）
+└── .env               # APIキー等（gitignore）
 ```
 
 ---
@@ -67,90 +79,42 @@ auto-income/
 
 ```bash
 npm install
-
-cp .env.example .env
-# .env を編集して各種APIキーを設定
+cp .env.example .env   # APIキーを設定
 ```
-
-### .env に設定が必要なもの
 
 | キー | 説明 |
 |------|------|
 | `ANTHROPIC_API_KEY` | Claude API キー（必須） |
-| `GMAIL_USER` | Gmail アドレス（必須） |
+| `GMAIL_USER` | Gmail アドレス（必須・はてなメール投稿の送信元） |
 | `GMAIL_APP_PASSWORD` | Gmail アプリパスワード（必須） |
-| `HATENA_EMAIL_SIDEHUSTLE` | 副業ブログのはてな投稿メール |
-| `HATENA_EMAIL_CAREER` | 転職ブログのはてな投稿メール |
-| `HATENA_EMAIL_HEALTH` | 健康ブログのはてな投稿メール |
 | `TWITTER_API_KEY` 等 | X API 認証情報（任意） |
-| `THREADS_ACCESS_TOKEN` | Threads API トークン（任意） |
-| `THREADS_USER_ID` | Threads ユーザーID（任意） |
-| `NOTIFY_EMAIL` | 投稿結果通知メール送信先（省略時はGMAIL_USERへ） |
-
----
 
 ## 使い方
 
 ```bash
-# 特定ジャンルだけ投稿
-npx tsx run.ts invest        # 投資・節約
-npx tsx run.ts side-hustle   # 副業・フリーランス
-npx tsx run.ts career        # 転職・キャリア
-npx tsx run.ts health        # 健康・ダイエット
-
-# 全ジャンル一括投稿（各30秒待機）
-npx tsx run-all.ts
-
-# 特定ジャンルをスキップして一括実行
-SKIP_GENRES=career npx tsx run-all.ts
-
-# 記事生成だけ確認（投稿しない）
-npx tsx generate.ts invest
-
-# 統計・収益予測を表示
-npx tsx stats.ts
-
-# 毎日自動投稿のcronを設定（9〜12時に各ジャンル）
-bash setup-cron.sh
+npx tsx run-all.ts           # 全3ジャンル一括投稿（本番と同じ）
+npx tsx run.ts invest        # 特定ジャンルだけ投稿
+npx tsx generate.ts invest   # 記事生成のみ（投稿しない・品質確認用）
+npx tsx cost-guard.ts        # 今月のAPI利用額を確認
+npx tsx resolve-urls.ts      # 過去記事URLの補正を手動実行
+SKIP_GENRES=emergency npx tsx run-all.ts  # ジャンルをスキップ
 ```
 
 ---
+
+## 運用状況・TODO
+
+- [x] 3ジャンル・ロングテール構成へ移行（2026-06）
+- [x] 体験談・感情訴求・事実ガードレール付きプロンプト
+- [x] 関連記事リンクの実URL化（RSS照合）
+- [x] アイキャッチ画像の投稿反映
+- [x] 月$5以内の予算ガード
+- [x] Google Search Console 登録・サイトマップ送信（2026-07）
+- [ ] **A8.net 登録・提携**（`genres.ts` の `REPLACE_XXXXX` を実リンクに差し替え）← 収益化の必須条件
+- [ ] X (Twitter) APIキー設定でSNS集客開始
+- [ ] AdSense 申請（記事が新構成で溜まってから）
 
 ## アフィリエイトリンクの設定
 
-`genres.ts` 内の `REPLACE_XXXXX` / `REPLACE-22` を実際のIDに置き換える。
-
-```ts
-// A8.net の場合（プログラムに参加後、専用URLを取得）
-楽天証券: "https://px.a8.net/svt/ejp?a8mat=実際のコード",
-
-// Amazon アソシエイト（タグをアソシエイトセントラルで確認）
-敗者のゲーム: "https://www.amazon.co.jp/dp/4532358973/?tag=あなたのタグ-22",
-```
-
----
-
-## 現在のジャンル一覧
-
-| ジャンルID | ジャンル名 | 主な収益源 |
-|-----------|-----------|-----------|
-| `invest` | 投資・節約 | 証券口座・クレカ・投資本 |
-| `side-hustle` | 副業・フリーランス | クラウドソーシング・会計ソフト |
-| `career` | 転職・キャリア | 転職エージェント（高単価） |
-| `health` | 健康・ダイエット | サプリ・フィットネス・宅食 |
-
----
-
-## 収益モデル（目標月収1000万円）
-
-| 収益源 | 想定単価 | 目標件数/月 | 想定月収 |
-|--------|----------|-------------|---------|
-| 転職エージェント | 15,000〜50,000円/件 | 50件 | 100万円 |
-| 証券口座開設 | 5,000〜20,000円/件 | 200件 | 200万円 |
-| クレジットカード | 3,000〜10,000円/件 | 300件 | 150万円 |
-| 保険・FX | 10,000〜30,000円/件 | 100件 | 150万円 |
-| サプリ・宅食 | 1,000〜5,000円/件 | 500件 | 100万円 |
-| Amazon アソシエイト | 購入額の3〜8% | 多数 | 50万円 |
-| note 有料記事 | 100〜500円/人 | 2,000人 | 50万円 |
-| YouTube 広告 | 〜 | フェーズ5以降 | — |
-| **合計目標** | | | **¥10,000,000** |
+`genres.ts` 内の `REPLACE_XXXXX` を A8.net で取得した実リンクに置き換える。
+`REPLACE_` を含むリンクは記事に出力されない安全設計のため、差し替えた瞬間から記事に反映される。
