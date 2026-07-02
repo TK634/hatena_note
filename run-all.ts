@@ -24,7 +24,12 @@ async function runGenre(genre: (typeof GENRES)[0]): Promise<PostResult> {
 
   try {
     console.log(`📝 記事を生成中 + OGP画像作成...`);
-    const article = await generateArticle(genre);
+    // 一時的なJSON解析エラー等に備えて1回だけリトライ
+    const article = await generateArticle(genre).catch(async (e) => {
+      console.warn(`   ⚠ 生成失敗、30秒後にリトライ: ${e.message}`);
+      await new Promise((r) => setTimeout(r, 30_000));
+      return generateArticle(genre);
+    });
     console.log(`   タイトル: ${article.title}`);
 
     // はてなブログ（必須）
