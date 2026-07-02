@@ -35,6 +35,7 @@ export const LINKS = {
   保険見直しラボ: PENDING,
   生活110番: PENDING,       // 緊急トラブル系の最優先提携先
   イエコマ: "https://px.a8.net/svt/ejp?a8mat=4B7SGT+FDP5DE+31YC+61C2Q", // 戸建メンテナンス（関東・東北・静岡）素材014
+  イエコマ排水管クリーニング: "https://px.a8.net/svt/ejp?a8mat=4B7SGT+FDP5DE+31YC+61JSI", // 排水管クリーニング訴求 素材015
   ミツモア: PENDING,
 
   // ===== Amazon（アソシエイト審査通過後にタグを確認） =====
