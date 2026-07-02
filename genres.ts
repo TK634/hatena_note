@@ -1,3 +1,5 @@
+import { LINKS } from "./affiliate-links.js";
+
 export interface AffiliateLinks {
   [category: string]: { [name: string]: string };
 }
@@ -47,16 +49,16 @@ export const GENRES: Genre[] = [
     ],
     affiliateLinks: {
       証券口座: {
-        楽天証券: "https://px.a8.net/svt/ejp?a8mat=REPLACE_RAKUTEN_SEC",
-        SBI証券: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SBI_SEC",
-        松井証券: "https://px.a8.net/svt/ejp?a8mat=REPLACE_MATSUI_SEC",
+        楽天証券: LINKS.楽天証券,
+        SBI証券: LINKS.SBI証券,
+        松井証券: LINKS.松井証券,
       },
       クレジットカード: {
-        楽天カード: "https://px.a8.net/svt/ejp?a8mat=REPLACE_RAKUTEN_CARD",
-        三井住友カードNL: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SMC_NL",
+        楽天カード: LINKS.楽天カード,
+        三井住友カードNL: LINKS.三井住友カードNL,
       },
       家計管理アプリ: {
-        マネーフォワードME: "https://px.a8.net/svt/ejp?a8mat=REPLACE_MF_ME",
+        マネーフォワードME: LINKS.マネーフォワードME,
       },
     },
     blog: {
@@ -96,21 +98,24 @@ export const GENRES: Genre[] = [
     ],
     affiliateLinks: {
       FX業者: {
-        GMOクリック証券FX: "https://px.a8.net/svt/ejp?a8mat=REPLACE_GMO_FX",
-        外為どっとコム: "https://px.a8.net/svt/ejp?a8mat=REPLACE_GAITAME",
-        SBI_FXトレード: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SBI_FX",
+        GMOクリック証券FX: LINKS.GMOクリック証券FX,
+        外為どっとコム: LINKS.外為どっとコム,
+        SBI_FXトレード: LINKS.SBI_FXトレード,
       },
       CFD口座: {
-        DMM_CFD: "https://px.a8.net/svt/ejp?a8mat=4B5R02+1JDC1E+1WP2+NTJWY",
+        DMM_CFD: LINKS.DMM_CFD,
       },
       クレジットカード: {
-        三井住友カードNL: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SMC_NL",
-        楽天プレミアムカード: "https://px.a8.net/svt/ejp?a8mat=REPLACE_RAKUTEN_PREMIUM",
-        PayPayカード: "https://px.a8.net/svt/ejp?a8mat=REPLACE_PAYPAY_CARD",
+        三井住友カードNL: LINKS.三井住友カードNL,
+        楽天プレミアムカード: LINKS.楽天プレミアムカード,
+        PayPayカード: LINKS.PayPayカード,
       },
       保険: {
-        ライフネット生命: "https://px.a8.net/svt/ejp?a8mat=REPLACE_LIFENET",
-        保険見直しラボ: "https://px.a8.net/svt/ejp?a8mat=REPLACE_HOKEN_MINAOSHI",
+        ライフネット生命: LINKS.ライフネット生命,
+        保険見直しラボ: LINKS.保険見直しラボ,
+      },
+      格安SIM: {
+        楽天モバイル: LINKS.楽天モバイル,
       },
     },
     blog: {
@@ -150,12 +155,12 @@ export const GENRES: Genre[] = [
     ],
     affiliateLinks: {
       水回り・トラブル業者: {
-        生活110番: "https://px.a8.net/svt/ejp?a8mat=REPLACE_SEIKATSU110",
-        イエコマ: "https://px.a8.net/svt/ejp?a8mat=REPLACE_IEKOMA",
-        ミツモア: "https://px.a8.net/svt/ejp?a8mat=REPLACE_MITSUMORA",
+        生活110番: LINKS.生活110番,
+        イエコマ: LINKS.イエコマ,
+        ミツモア: LINKS.ミツモア,
       },
       工具・部品: {
-        Amazon水回り用品: "https://www.amazon.co.jp/s?k=ラバーカップ&tag=tk634-22",
+        Amazon水回り用品: LINKS.Amazon水回り用品,
       },
     },
     blog: {

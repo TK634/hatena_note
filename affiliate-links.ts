@@ -1,0 +1,49 @@
+/**
+ * アフィリエイトリンクの一元管理ファイル
+ *
+ * ここが唯一の「本物のリンク置き場」。ジャンル定義（genres.ts）はここから参照する。
+ * 新しい提携が承認されたら、このファイルに1行追加するだけで記事に反映される。
+ *
+ * ルール:
+ * - 未提携・未取得のリンクは値を "PENDING" にしておく（記事には出力されない）
+ * - A8のリンクは「広告リンク作成 → テキスト素材」の href URL をそのまま貼る
+ * - Amazonは https://www.amazon.co.jp/dp/ASIN/?tag=タグ-22 形式
+ */
+
+export const PENDING = "PENDING"; // 未取得の印（REPLACE_と同様に出力されない）
+
+export const LINKS = {
+  // ===== A8.net 提携済み（2026-06-08 提携） =====
+  DMM_CFD: "https://px.a8.net/svt/ejp?a8mat=4B5R02+1JDC1E+1WP2+NTJWY", // 新規登録+1取引 14,200円
+  松井証券: PENDING,        // 提携済み・リンク未取得（新規口座開設 1,000円）
+  楽天モバイル: PENDING,    // 提携済み・リンク未取得（新規利用 7,000円）
+  楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
+  お名前ドットコム: PENDING,  // 提携済み・リンク未取得
+
+  // ===== 未提携（承認され次第リンクを貼る） =====
+  楽天証券: PENDING,
+  SBI証券: PENDING,
+  楽天カード: PENDING,
+  三井住友カードNL: PENDING,
+  楽天プレミアムカード: PENDING,
+  PayPayカード: PENDING,
+  マネーフォワードME: PENDING,
+  GMOクリック証券FX: PENDING,
+  外為どっとコム: PENDING,
+  SBI_FXトレード: PENDING,
+  ライフネット生命: PENDING,
+  保険見直しラボ: PENDING,
+  生活110番: PENDING,       // 緊急トラブル系の最優先提携先
+  イエコマ: PENDING,
+  ミツモア: PENDING,
+
+  // ===== Amazon（アソシエイト審査通過後にタグを確認） =====
+  Amazon水回り用品: "https://www.amazon.co.jp/s?k=ラバーカップ&tag=tk634-22",
+} as const;
+
+export type LinkName = keyof typeof LINKS;
+
+/** 有効な（取得済みの）リンクか */
+export function isActiveLink(url: string): boolean {
+  return url !== PENDING && !url.includes("REPLACE_");
+}

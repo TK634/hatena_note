@@ -22,9 +22,10 @@ export interface Article {
   ogpImagePath?: string;
 }
 
-// 未設定（REPLACE_を含む）のアフィリリンクは壊れたリンクになるので除外する
+// 未設定（PENDING / REPLACE_）のアフィリリンクは壊れたリンクになるので除外する
+import { isActiveLink } from "./affiliate-links.js";
 function isValidLink(url: string): boolean {
-  return !url.includes("REPLACE_");
+  return isActiveLink(url);
 }
 
 function buildAffiliateSection(genre: Genre): string {
