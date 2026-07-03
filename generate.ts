@@ -20,6 +20,8 @@ export interface Article {
   tags: string[];
   genreId: string;
   ogpImagePath?: string;
+  /** 記事テーマに直接関係するアフィリリンク名（AIが記事ごとに選定） */
+  relevantLinks?: string[];
 }
 
 // 未設定（PENDING / REPLACE_）のアフィリリンクは壊れたリンクになるので除外する
@@ -28,17 +30,21 @@ function isValidLink(url: string): boolean {
   return isActiveLink(url);
 }
 
-function buildAffiliateSection(genre: Genre): string {
+function buildAffiliateSection(genre: Genre, relevantLinks: string[]): string {
+  // AIが「この記事に直接関係する」と選んだリンクだけを載せる。
+  // 選定がない・全滅の場合はセクション自体を出さない（無関係リンク防止）。
   const validCategories = Object.entries(genre.affiliateLinks)
     .map(([category, links]) => {
-      const valid = Object.entries(links).filter(([, url]) => isValidLink(url));
+      const valid = Object.entries(links).filter(
+        ([name, url]) => isValidLink(url) && relevantLinks.includes(name)
+      );
       return [category, valid] as const;
     })
     .filter(([, valid]) => valid.length > 0);
 
-  if (validCategories.length === 0) return ""; // 有効リンクが無ければセクションごと出さない
+  if (validCategories.length === 0) return "";
 
-  let section = "\n\n---\n\n## おすすめリソース\n\n";
+  let section = "\n\n---\n\n## この記事に関連するサービス\n\n";
   for (const [category, links] of validCategories) {
     section += `### ${category}\n`;
     for (const [name, url] of links) {
@@ -60,11 +66,14 @@ function buildPrompt(genre: Genre, topic: string): string {
 
   const affiliateBlock =
     validProducts.length > 0
-      ? `【商品の自然な言及】
-本文の自然な流れの中（比較・紹介・体験談部分）で、以下の商品に2〜3箇所だけ触れてください。宣伝臭くせず、「自分はこれを使っている／比較した結果これを選んだ」という体験ベースで書くこと。リンクは付けず名前だけ出せば十分です（リンクはシステムが後で付けます）。
-対象商品: ${validProducts.join("、")}`
+      ? `【商品の自然な言及とリンク選定】
+利用可能な商品・サービス一覧: ${validProducts.join("、")}
+
+- この一覧のうち、**記事のテーマに直接関係するものだけ**を relevantLinks に選んでください（0〜3個）。例：鍵のトラブル記事に排水管サービスは選ばない。関係するものが1つもなければ空配列 [] にすること。無関係なリンクを載せると読者の信頼を失います。
+- relevantLinks に選んだ商品は、本文の自然な流れ（比較・体験談部分）でも1〜2回名前を出してください。宣伝臭くせず体験ベースで。リンクは付けず名前だけでよい（リンクはシステムが付けます）。
+- 選ばなかった商品には本文でも触れないこと。`
       : `【商品の言及について】
-今回は紹介できる具体的な商品リンクが未設定のため、特定サービスへの誘導は書かないでください。一般名詞（「ネット証券」「格安SIM」など）で説明し、固有のサービス名でのおすすめや比較は避けてください。`;
+今回は紹介できる具体的な商品リンクが未設定のため、特定サービスへの誘導は書かないでください。一般名詞（「ネット証券」「格安SIM」など）で説明し、固有のサービス名でのおすすめや比較は避けてください。relevantLinks は空配列 [] にすること。`;
 
   const currentYear = new Date().getFullYear();
 
@@ -118,7 +127,8 @@ function buildPrompt(genre: Genre, topic: string): string {
 {
   "title": "記事タイトル（32文字以内）",
   "content": "記事本文（マークダウン）",
-  "tags": ["タグ1", "タグ2", "タグ3", "タグ4", "タグ5", "タグ6", "タグ7", "タグ8"]
+  "tags": ["タグ1", "タグ2", "タグ3", "タグ4", "タグ5", "タグ6", "タグ7", "タグ8"],
+  "relevantLinks": ["記事テーマに直接関係する商品名のみ（無ければ空配列）"]
 }`;
 }
 
@@ -170,8 +180,8 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
 
   const article: Article = { ...parsed, genreId: genre.id };
 
-  // アフィリエイトセクションを末尾に追加
-  article.content += buildAffiliateSection(genre);
+  // 記事テーマに関係するリンクだけを末尾に追加（AIが選定、無関係リンク防止）
+  article.content += buildAffiliateSection(genre, article.relevantLinks ?? []);
 
   // 同ジャンルの過去記事への内部リンクを追加
   try {
