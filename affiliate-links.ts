@@ -20,9 +20,11 @@ export const LINKS = {
   楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得
 
-  // ===== 申請中（2026-07-03 提携申請済み・承認待ち） =====
-  松井証券iDeCo: PENDING,     // 新規口座開設申込 500円・審査あり
-  三井住友カードNL: PENDING,  // 審査あり
+  // ===== 申請中（提携申請済み・承認待ち） =====
+  松井証券iDeCo: PENDING,     // 2026-07-03申請 新規口座開設申込 500円・審査あり
+  三井住友カードNL: PENDING,  // 2026-07-03申請 審査あり
+  GMOクリック証券FX: PENDING, // 2026-07-05申請 審査あり
+  SBI_FXトレード: PENDING,    // 2026-07-05申請 審査あり
 
   // ===== 未提携（承認され次第リンクを貼る） =====
   楽天証券: PENDING,
@@ -31,9 +33,7 @@ export const LINKS = {
   楽天プレミアムカード: PENDING,
   PayPayカード: PENDING,
   マネーフォワードME: PENDING,
-  GMOクリック証券FX: PENDING,
-  外為どっとコム: PENDING,
-  SBI_FXトレード: PENDING,
+  外為どっとコム: PENDING,    // A8に無し（他ASPの可能性・優先度低）
   ライフネット生命: PENDING,
   保険見直しラボ: PENDING,
   生活110番: PENDING,       // 緊急トラブル系の最優先提携先
