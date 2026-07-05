@@ -1,88 +1,72 @@
 /**
- * Google Trends RSS から今日のトレンドキーワードを取得し、
- * ジャンルに関連するものをトピックとして記事生成に使う
+ * はてなブックマーク人気エントリ（=実際に今読まれている他人の記事）から
+ * トレンドの切り口・タイトルの型を学び、自ジャンルの記事テーマに反映する。
  *
- * 使い方: npx tsx trend-topics.ts [genreId]
- * → 通常の generateArticle() の customTopic 引数として渡す
+ * 3日サイクルの「トレンド探索日」に generate.ts から呼ばれる。
+ * 使い方（単体確認）: npx tsx trend-topics.ts [genreId]
  */
 import { GENRES, type Genre } from "./genres.js";
 
-interface TrendItem {
-  title: string;
-  approxTraffic: string;
+// ジャンル → はてブ人気エントリのカテゴリ
+const CATEGORY_MAP: Record<string, string> = {
+  invest: "economics",      // 政治と経済
+  "fx-credit": "economics",
+  emergency: "life",        // 暮らし
+};
+
+// &#x...; 形式のHTMLエンティティをデコード
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 }
 
-// Google Trends Japan RSS（公開エンドポイント）
-const TRENDS_RSS_URL = "https://trends.google.co.jp/trends/trendingsearches/daily/rss?geo=JP";
-
-async function fetchTrendingTopics(): Promise<TrendItem[]> {
+/** 指定カテゴリの人気エントリタイトルを取得（無料・認証不要） */
+export async function fetchHotEntryTitles(category: string, limit = 10): Promise<string[]> {
   try {
-    const res = await fetch(TRENDS_RSS_URL, {
+    const res = await fetch(`https://b.hatena.ne.jp/hotentry/${category}.rss`, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; auto-income-bot/1.0)" },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const xml = await res.text();
 
-    const items: TrendItem[] = [];
-    const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
-
-    for (const match of itemMatches) {
-      const content = match[1];
-      const title = content.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ?? "";
-      const traffic = content.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)?.[1] ?? "0";
-      if (title) items.push({ title, approxTraffic: traffic });
+    const titles: string[] = [];
+    for (const m of xml.matchAll(/<item[^>]*>[\s\S]*?<title>([\s\S]*?)<\/title>/g)) {
+      const t = decodeEntities(m[1].trim());
+      if (t && !t.startsWith("はてなブックマーク")) titles.push(t);
+      if (titles.length >= limit) break;
     }
-
-    return items.slice(0, 20);
+    return titles;
   } catch (e) {
-    console.warn(`⚠ トレンド取得失敗（デフォルトトピック使用）: ${e}`);
+    console.warn(`   ⚠ トレンド取得失敗: ${e instanceof Error ? e.message : e}`);
     return [];
   }
 }
 
-// ジャンルのキーワードとトレンドの関連度をスコアリング
-function scoreRelevance(trendTitle: string, genre: Genre): number {
-  const keywordsMap: Record<string, string[]> = {
-    invest: ["投資", "株", "NISA", "iDeCo", "積立", "節約", "資産", "配当", "円安", "金利", "インフレ"],
-    "side-hustle": ["副業", "フリーランス", "在宅", "稼ぐ", "収入", "副収入", "クラウド", "アフィリエイト"],
-    career: ["転職", "就職", "年収", "キャリア", "求人", "採用", "リストラ", "テレワーク", "リモート"],
-    health: ["ダイエット", "健康", "筋トレ", "食事", "睡眠", "病気", "医療", "サプリ", "痩せる"],
-    beauty: ["美容", "コスメ", "スキンケア", "化粧", "肌", "美白", "ヘア", "ネイル", "エステ"],
-    realestate: ["不動産", "住宅", "マンション", "ローン", "家賃", "購入", "土地", "賃貸"],
-    "fx-credit": ["FX", "クレカ", "保険", "仮想通貨", "ビットコイン", "ポイント", "マイル", "金融"],
-  };
-
-  const keywords = keywordsMap[genre.id] ?? [];
-  return keywords.filter((kw) => trendTitle.includes(kw)).length;
-}
-
+/**
+ * トレンド探索日のテーマ指示を生成。
+ * 他人の伸びている記事から「切り口・タイトルの型・関心事」を学ばせつつ、
+ * ジャンルから外れた時事ネタの模倣やコピーは明示的に禁止する。
+ */
 export async function getTrendTopicForGenre(genre: Genre): Promise<string | null> {
-  const trends = await fetchTrendingTopics();
-  if (trends.length === 0) return null;
+  const category = CATEGORY_MAP[genre.id] ?? "life";
+  const titles = await fetchHotEntryTitles(category);
+  if (titles.length === 0) return null;
 
-  const scored = trends
-    .map((t) => ({ ...t, score: scoreRelevance(t.title, genre) }))
-    .filter((t) => t.score > 0)
-    .sort((a, b) => b.score - a.score);
+  console.log(`   🔥 トレンド探索モード: はてブ人気エントリ${titles.length}件を参考に生成`);
+  return `【トレンド分析回】いま、はてなブックマークで実際に読まれている記事のタイトル一覧:
+${titles.map((t) => `・${t}`).join("\n")}
 
-  if (scored.length === 0) return null;
-
-  const best = scored[0];
-  console.log(`   🔥 トレンドトピック採用: 「${best.title}」（検索数: ${best.approxTraffic}）`);
-  return `${best.title}について${genre.name}の視点から解説`;
+この一覧から「読まれるタイトルの型」「読者の関心の切り口」を分析し、それを${genre.name}ジャンルに応用した具体的なテーマを1つ自分で設定して書いてください。
+- 一覧の記事の内容をコピー・要約するのは禁止。学ぶのは切り口と型だけ。
+- ジャンルと無関係な時事ネタ・政治ネタをそのまま扱うのも禁止。
+- あくまで${genre.targetReader}が検索しそうな実用テーマにすること。`;
 }
 
 // 単体実行: npx tsx trend-topics.ts [genreId]
-if (process.argv[1].endsWith("trend-topics.ts") || process.argv[1].endsWith("trend-topics.js")) {
-  const genreId = process.argv[2];
-  const genre = GENRES.find((g) => g.id === genreId) ?? GENRES[0];
-
-  fetchTrendingTopics().then((trends) => {
-    console.log(`\n🔥 今日のトレンド（日本）:`);
-    trends.slice(0, 10).forEach((t, i) => {
-      const score = scoreRelevance(t.title, genre);
-      const mark = score > 0 ? " ★" : "";
-      console.log(`  ${i + 1}. ${t.title} (${t.approxTraffic})${mark}`);
-    });
-  });
+if (process.argv[1] && (process.argv[1].endsWith("trend-topics.ts") || process.argv[1].endsWith("trend-topics.js"))) {
+  const genre = GENRES.find((g) => g.id === process.argv[2]) ?? GENRES[0];
+  getTrendTopicForGenre(genre).then((t) => console.log(t ?? "（トレンド取得失敗）"));
 }

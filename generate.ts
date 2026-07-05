@@ -140,13 +140,18 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
 
   let topic = customTopic ?? null;
 
-  // 【自己改善ループ】3日に1回、反応が良かった記事の「深掘り記事」を生成する
-  if (!topic) {
+  // 【自己改善ループ】3日サイクルで「活用・探索・安定」のバランスを取る
+  //   day%3==0: 深掘り日（反応が良かった自記事の関連テーマ = 活用）
+  //   day%3==1: トレンド日（他人の伸びている記事から切り口を学ぶ = 探索）
+  //   day%3==2: 通常日（トピックローテーション = 網羅性の維持）
+  // 偏りすぎによる機会損失を防ぐため、深掘り・トレンドは各1/3日に制限。
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+
+  if (!topic && dayOfYear % 3 === 0) {
     try {
-      const dayOfYear = Math.floor(
-        (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-      );
-      if (dayOfYear % 3 === 0 && fs.existsSync("winning-topics.json")) {
+      if (fs.existsSync("winning-topics.json")) {
         const { winners } = JSON.parse(fs.readFileSync("winning-topics.json", "utf-8"));
         const genreWinners = (winners ?? []).filter((w: { genreId: string }) => w.genreId === genre.id);
         if (genreWinners.length > 0) {
@@ -158,15 +163,16 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
     } catch { /* 深掘り失敗時は通常ローテーションへ */ }
   }
 
-  // トレンドトピックを優先（30%の確率 or 明示的に指定）
-  if (!topic) {
+  if (!topic && dayOfYear % 3 === 1) {
     try {
       const { getTrendTopicForGenre } = await import("./trend-topics.js");
-      const trendTopic = await getTrendTopicForGenre(genre);
-      topic = trendTopic ?? getTopicForGenre(genre);
-    } catch {
-      topic = getTopicForGenre(genre);
-    }
+      topic = await getTrendTopicForGenre(genre);
+    } catch { /* トレンド取得失敗時は通常ローテーションへ */ }
+  }
+
+  // 通常日 or 上記が不発の日はトピックローテーション
+  if (!topic) {
+    topic = getTopicForGenre(genre);
   }
 
   const response = await client.messages.create({
