@@ -20,6 +20,8 @@ export const LINKS = {
   BIGLOBE_WiMAX: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DCGTYQ+B4+2BD44I", // 申込 5,000円（素材002・EPC50以上）
   MONSTER_MOBILE: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DKSWFM+348K+3YW8WI", // 開通 2,000〜3,000円（素材001）
   おきらくホームWiFi: "https://px.a8.net/svt/ejp?a8mat=4B7U10+CWE4MQ+348K+44UKYA", // 開通 4,000円（素材001・個人向け）
+  auひかり: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DRY3OY+42Y0+5YJRM", // 開通 30,000円（素材001・EPC50以上）
+  GMOとくとくBBドコモ光: "https://px.a8.net/svt/ejp?a8mat=4B7U10+ESUZ76+50+54MIOY", // 利用開始 9,000〜17,000円（素材010・EPC50以上）
   楽天モバイル: "https://px.a8.net/svt/ejp?a8mat=4B5R02+2DQFW2+5W58+5YRHE", // 新規利用 7,000円（素材002・EPC50以上）
   楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得

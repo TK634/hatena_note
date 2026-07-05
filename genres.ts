@@ -134,6 +134,10 @@ export const GENRES: Genre[] = [
         MONSTERMOBILE: LINKS.MONSTER_MOBILE,
         おきらくホームWiFi: LINKS.おきらくホームWiFi,
       },
+      光回線: {
+        auひかり: LINKS.auひかり,
+        GMOとくとくBBのドコモ光: LINKS.GMOとくとくBBドコモ光,
+      },
     },
     blog: {
       type: "hatena",
