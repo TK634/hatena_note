@@ -113,6 +113,13 @@ async function main() {
     console.error(`   URL補正エラー（続行）: ${e.message}`)
   );
 
+  // 【自己改善ループ】記事の反応データを収集し、勝ちテーマを更新（無料・API課金なし）
+  console.log(`📊 記事の反応データを分析中...`);
+  const { analyzePerformance } = await import("./analyze.js");
+  await analyzePerformance().catch((e) =>
+    console.error(`   分析エラー（続行）: ${e.message}`)
+  );
+
   const results: PostResult[] = [];
   for (const genre of targets) {
     // 月の予算チェック（$5を超えないための安全装置）

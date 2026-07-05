@@ -140,6 +140,24 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
 
   let topic = customTopic ?? null;
 
+  // 【自己改善ループ】3日に1回、反応が良かった記事の「深掘り記事」を生成する
+  if (!topic) {
+    try {
+      const dayOfYear = Math.floor(
+        (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+      );
+      if (dayOfYear % 3 === 0 && fs.existsSync("winning-topics.json")) {
+        const { winners } = JSON.parse(fs.readFileSync("winning-topics.json", "utf-8"));
+        const genreWinners = (winners ?? []).filter((w: { genreId: string }) => w.genreId === genre.id);
+        if (genreWinners.length > 0) {
+          const titles = genreWinners.slice(0, 3).map((w: { title: string }) => `「${w.title}」`).join("、");
+          topic = `過去に読者の反応が良かった記事: ${titles}。これらと同じ読者が次に知りたくなる、より具体的なロングテールテーマをあなたが1つ設定して書く（同じ内容の繰り返しは禁止。関連する別の疑問・状況を扱うこと）`;
+          console.log(`   🔁 深掘りモード: 勝ちテーマから派生記事を生成`);
+        }
+      }
+    } catch { /* 深掘り失敗時は通常ローテーションへ */ }
+  }
+
   // トレンドトピックを優先（30%の確率 or 明示的に指定）
   if (!topic) {
     try {

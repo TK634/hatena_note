@@ -8,3 +8,6 @@ cron.log
 dashboard.html
 .note-session.json
 cost-log.json
+performance-log.json
+winning-topics.json
+manual-signals.json
