@@ -103,6 +103,9 @@ export const GENRES: Genre[] = [
       "CFD口座を開設して最初の取引までにやったこと【必要書類と日数】",
       "日経225CFDを少額で取引してみた実体験【株の現物との違い】",
       "CFDの追証リスクを理解してから始める資金管理の基本",
+      "一人暮らしのネット回線は工事不要WiFiで十分か【光回線との比較】",
+      "引っ越し先ですぐネットを使うためにWiMAXを選んだ体験談",
+      "ネット代とスマホ代を合わせて月5000円台にした通信費の組み方",
     ],
     affiliateLinks: {
       FX業者: {
@@ -124,6 +127,12 @@ export const GENRES: Genre[] = [
       },
       格安SIM: {
         楽天モバイル: LINKS.楽天モバイル,
+      },
+      ネット回線: {
+        GMOとくとくBBのWiMAX: LINKS.GMOとくとくBB_WiMAX,
+        BIGLOBEのWiMAX: LINKS.BIGLOBE_WiMAX,
+        MONSTERMOBILE: LINKS.MONSTER_MOBILE,
+        おきらくホームWiFi: LINKS.おきらくホームWiFi,
       },
     },
     blog: {

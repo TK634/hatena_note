@@ -16,6 +16,10 @@ export const LINKS = {
   // ===== A8.net 提携済み（2026-06-08 提携） =====
   DMM_CFD: "https://px.a8.net/svt/ejp?a8mat=4B5R02+1JDC1E+1WP2+NTJWY", // 新規登録+1取引 14,200円
   松井証券: "https://px.a8.net/svt/ejp?a8mat=4B5R02+29KENM+3XCC+69HAA", // 新規口座開設 1,000円（NISA訴求素材052）
+  GMOとくとくBB_WiMAX: "https://px.a8.net/svt/ejp?a8mat=4B7U10+CM9RCI+50+3H3TCI", // WiMAX5G 5,100円（素材013・EPC50以上）
+  BIGLOBE_WiMAX: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DCGTYQ+B4+2BD44I", // 申込 5,000円（素材002・EPC50以上）
+  MONSTER_MOBILE: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DKSWFM+348K+3YW8WI", // 開通 2,000〜3,000円（素材001）
+  おきらくホームWiFi: "https://px.a8.net/svt/ejp?a8mat=4B7U10+CWE4MQ+348K+44UKYA", // 開通 4,000円（素材001・個人向け）
   楽天モバイル: "https://px.a8.net/svt/ejp?a8mat=4B5R02+2DQFW2+5W58+5YRHE", // 新規利用 7,000円（素材002・EPC50以上）
   楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得
