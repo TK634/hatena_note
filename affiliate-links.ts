@@ -27,7 +27,7 @@ export const LINKS = {
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得
 
   // ===== 申請中（提携申請済み・承認待ち） =====
-  松井証券iDeCo: PENDING,     // 2026-07-03申請 新規口座開設申込 500円・審査あり
+  松井証券iDeCo: "https://px.a8.net/svt/ejp?a8mat=4B7SGU+18NJ5E+3XCC+BXIYQ", // 口座開設申込 500円（素材004・承認済み）
   三井住友カードNL: PENDING,  // 2026-07-03申請 審査あり
   GMOクリック証券FX: PENDING, // 2026-07-05申請 審査あり
   SBI_FXトレード: PENDING,    // 2026-07-05申請 審査あり
