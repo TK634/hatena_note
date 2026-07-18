@@ -30,6 +30,38 @@ function isValidLink(url: string): boolean {
   return isActiveLink(url);
 }
 
+// ===== ブログ全体の統一感（M2: お金と暮らしの最適化）=====
+// ジャンルが変わっても「同一人物が実体験を語る」声を保つための共通人格。
+// 全記事のプロンプトに注入し、散らばりを"一貫した語り手"で束ねる。
+const BLOG_IDENTITY = `【このブログの一貫した人格（全ジャンル共通・最優先）】
+このブログは「30〜40代の会社員が、自分で試したお金と暮らしの最適化を、数字と失敗込みで実体験として綴る」個人ブログです。ジャンルが投資でも美容でも住まいでも、語り手は常に同一人物。次を必ず守り、ブログ全体の統一感を保つこと:
+- 語り口は終始、地に足のついた等身大の会社員の一人称。専門家・メディアぶらない。
+- どんなテーマも「自分や家族の"暮らしとお金"」に必ず引きつける。例: 美容・健康の記事でも「かけた金額・コスパ・続けやすさ・節約」の観点を必ず1つ以上入れる。
+- 量産テンプレ感・煽り・誇大を出さない。読者が「この人が実際にやったんだな」と感じる密度を優先。`;
+
+interface LogEntry { genreId: string; title: string }
+
+/** post-log.json から同ジャンルの既存タイトルを取得（重複回避プロンプト用） */
+function loadExistingTitles(genreId: string, limit = 60): string[] {
+  try {
+    const logs: LogEntry[] = JSON.parse(fs.readFileSync("post-log.json", "utf-8"));
+    return logs
+      .filter((l) => l.genreId === genreId && l.title)
+      .map((l) => l.title)
+      .slice(-limit);
+  } catch {
+    return [];
+  }
+}
+
+/** タイトルを正規化（年号・記号・空白を除去）して重複判定に使う */
+function normalizeTitle(t: string): string {
+  return (t || "")
+    .replace(/20\d\d|年版?|最新|【[^】]*】|[|｜].*$/g, "")
+    .replace(/[!！?？。、・\s]/g, "")
+    .toLowerCase();
+}
+
 function buildAffiliateSection(genre: Genre, relevantLinks: string[]): string {
   // AIが「この記事に直接関係する」と選んだリンクだけを載せる。
   // 選定がない・全滅の場合はセクション自体を出さない（無関係リンク防止）。
@@ -55,7 +87,7 @@ function buildAffiliateSection(genre: Genre, relevantLinks: string[]): string {
   return section;
 }
 
-function buildPrompt(genre: Genre, topic: string): string {
+function buildPrompt(genre: Genre, topic: string, existingTitles: string[] = []): string {
   // 有効な（REPLACE_を含まない）アフィリエイト商品だけを本文挿入対象にする
   const validProducts = Object.entries(genre.affiliateLinks)
     .flatMap(([cat, links]) =>
@@ -77,11 +109,22 @@ function buildPrompt(genre: Genre, topic: string): string {
 
   const currentYear = new Date().getFullYear();
 
-  return `あなたは${genre.writerPersona}として、自分の実体験を交えてブログ記事を書きます。
+  const dedupBlock =
+    existingTitles.length > 0
+      ? `【重複回避（重要）】
+以下はこのジャンルで既に投稿済みの記事タイトルです。これらと同じテーマ・結論・切り口の記事は作らないこと。近いテーマを扱う場合も、必ず別の具体的な状況・角度にずらし、タイトルも被らせないこと:
+${existingTitles.map((t) => `- ${t}`).join("\n")}`
+      : "";
+
+  return `${BLOG_IDENTITY}
+
+あなたは${genre.writerPersona}として、自分の実体験を交えてブログ記事を書きます。
 ※現在は${currentYear}年です。年号が必要な箇所は${currentYear}年と書いてください。
 
 テーマ: ${topic}
 想定読者: ${genre.targetReader}
+
+${dedupBlock}
 
 【最重要：リアリティと独自性】
 読者は「AIが書いた一般論」を一瞬で見抜いて離脱します。以下を必ず守ってください。
@@ -106,7 +149,7 @@ function buildPrompt(genre: Genre, topic: string): string {
 - 間違った制度の数字を1つ書くだけで記事全体の信頼が崩れる。迷ったら数字をぼかして公式に誘導すること。
 
 【SEO構造】
-- タイトル: 検索意図に合う32文字以内。狙うキーワードを前half に置き、数字や${currentYear}年を含める。
+- タイトル: 検索意図に合う32文字以内。狙うキーワードを前半に置く。「【${currentYear}年版】」のような定型の年号タグを機械的に全タイトルへ付けない（量産感が出る）。年号は制度改定・比較など本当に鮮度が要るテーマのときだけ自然に入れる。具体的な状況を1つ盛り込み、既存記事とタイトルが被らないようにする。
 - 冒頭100文字に、検索キーワードと「この記事を読むと何が解決するか」を明示。
 - h2見出しにキーワードと関連語（共起語）を自然に含める。
 - 記事の途中か末尾に「よくある質問」セクションを作り、Q&Aを3つ入れる（Googleの強調スニペット対策）。各回答は2〜3文で簡潔に。
@@ -175,10 +218,13 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
     topic = getTopicForGenre(genre);
   }
 
+  // 既存タイトルを渡して重複を避ける（統一感＆カニバリ防止）
+  const existingTitles = loadExistingTitles(genre.id);
+
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 8192,
-    messages: [{ role: "user", content: buildPrompt(genre, topic) }],
+    messages: [{ role: "user", content: buildPrompt(genre, topic, existingTitles) }],
   });
 
   // 実トークン数から課金額を積算（月の予算管理用）
@@ -203,6 +249,13 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
   }
 
   const article: Article = { ...parsed, genreId: genre.id };
+
+  // 重複ガード: 生成タイトルが既存とほぼ同一なら警告（実行サマリーで気づけるように）
+  const normNew = normalizeTitle(article.title);
+  const clash = existingTitles.find((t) => normalizeTitle(t) === normNew);
+  if (clash) {
+    console.warn(`   ⚠ 重複の可能性: 「${article.title}」は既存「${clash}」と酷似。トピック見直しを推奨`);
+  }
 
   // 記事テーマに関係するリンクだけを末尾に追加（AIが選定、無関係リンク防止）
   article.content += buildAffiliateSection(genre, article.relevantLinks ?? []);
