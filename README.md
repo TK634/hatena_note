@@ -118,6 +118,19 @@ npx tsx resolve-urls.ts      # 過去記事URLの補正を手動実行
 SKIP_GENRES=emergency npx tsx run-all.ts  # ジャンルをスキップ
 ```
 
+## Webダッシュボード（dashboard/）
+
+スマホ対応の管理画面。今日の投稿ステータス確認、記事一覧、手動実行、トピック管理ができる。
+`auto-income/` 本体とは独立したNext.jsプロジェクトで、post-log.json・cost-log.json・genres.ts などは相対パスで参照する。
+
+```bash
+cd dashboard
+npm install
+npm run dev    # http://localhost:3000
+```
+
+`.env` に `DASHBOARD_USER` / `DASHBOARD_PASSWORD` を設定するとBasic認証がかかる（未設定時は認証なし）。
+
 ---
 
 ## 運用状況・TODO

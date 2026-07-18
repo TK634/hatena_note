@@ -1,0 +1,18 @@
+{
+  "name": "自動収益化ダッシュボード",
+  "short_name": "収益化DB",
+  "description": "はてなブログ自動投稿・アフィリエイト収益化システムの管理ダッシュボード",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

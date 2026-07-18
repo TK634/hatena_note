@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+}
+
+/* スマホでのタップ時のハイライトを消してアプリっぽくする */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
