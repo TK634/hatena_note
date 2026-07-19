@@ -13,6 +13,8 @@ export interface BlogConfig {
 export interface Genre {
   id: string;
   name: string;
+  /** はてなブログのカテゴリ名（M2: 統一されたカテゴリ体系）。メール投稿の件名 [category] に使う */
+  category: string;
   topics: string[];
   affiliateLinks: AffiliateLinks;
   blog: BlogConfig;
@@ -25,6 +27,7 @@ export const GENRES: Genre[] = [
   {
     id: "invest",
     name: "新NISA・証券の手続き",
+    category: "資産運用・NISA",
     topics: [
       "楽天証券からSBI証券へNISA口座を移管する手順と注意点【2026年】",
       "新NISA つみたて投資枠と成長投資枠の使い分け【実例3パターン】",
@@ -75,6 +78,7 @@ export const GENRES: Genre[] = [
   {
     id: "fx-credit",
     name: "クレカ・FX・保険の比較",
+    category: "クレカ・FX・保険",
     topics: [
       "三井住友カードNLを申し込みから到着まで使った実体験【審査〜初回利用】",
       "楽天カードからゴールドに切り替える損益分岐点【年会費の元を取る条件】",
@@ -133,6 +137,7 @@ export const GENRES: Genre[] = [
   {
     id: "net",
     name: "ネット回線（光回線・WiMAX・格安SIM）",
+    category: "通信費・ネット回線",
     topics: [
       // 比較ピラー（クラスターの中心・内部リンクのハブ）
       "光回線とホームルーター（WiMAX）どっちが得か 1年ずつ使って比較した実体験",
@@ -192,6 +197,7 @@ export const GENRES: Genre[] = [
   {
     id: "emergency",
     name: "住まいの緊急トラブル",
+    category: "住まいのトラブル",
     topics: [
       "賃貸でトイレが詰まったとき大家に連絡する前にやった3つのこと",
       "キッチンの排水溝が逆流したとき自分で解決した手順【業者を呼ぶ基準】",

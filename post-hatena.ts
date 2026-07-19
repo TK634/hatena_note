@@ -28,10 +28,14 @@ export async function postToHatena(article: Article, genre: Genre): Promise<stri
     console.warn(`   ⚠ アイキャッチ画像なしで投稿`);
   }
 
+  // はてなのメール投稿は件名先頭の [○○] をカテゴリとして解釈する。
+  // M2: 統一カテゴリ体系（genre.category）を使い、旧・冗長なジャンル名での分類を避ける。
+  const category = genre.category ?? genre.name;
+
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: hatenaEmail,
-    subject: `[${genre.name}]${article.title}`,
+    subject: `[${category}]${article.title}`,
     html: htmlContent,
     attachments,
   });
