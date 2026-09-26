@@ -60,6 +60,7 @@ export const GENRES: Genre[] = [
         SBI証券: LINKS.SBI証券,
         松井証券: LINKS.松井証券,
         松井証券のiDeCo: LINKS.松井証券iDeCo,
+        DMM株: LINKS.DMM株,
         GMOクリック証券: LINKS.GMOクリック証券,
         ALTERNA: LINKS.ALTERNA,
       },
