@@ -23,7 +23,7 @@ export const LINKS = {
   auひかり: "https://px.a8.net/svt/ejp?a8mat=4B7U10+DRY3OY+42Y0+5YJRM", // 開通 30,000円（素材001・EPC50以上）
   GMOとくとくBBドコモ光: "https://px.a8.net/svt/ejp?a8mat=4B7U10+ESUZ76+50+54MIOY", // 利用開始 9,000〜17,000円（素材010・EPC50以上）
   楽天モバイル: "https://px.a8.net/svt/ejp?a8mat=4B5R02+2DQFW2+5W58+5YRHE", // 新規利用 7,000円（素材002・EPC50以上）
-  楽天アフィリエイト: PENDING, // 提携済み・リンク未取得
+  楽天アフィリエイト: "https://rpx.a8.net/svt/ejp?a8mat=4B5Q89+BPIX2Q+2HOM+6C1VM&rakuten=y&a8ejpredirect=http%3A%2F%2Fhb.afl.rakuten.co.jp%2Fhgc%2F0ea62065.34400275.0ea62066.204f04c0%2Fa26060722857_4B5Q89_BPIX2Q_2HOM_6C1VM%3Fpc%3Dhttp%253A%252F%252Fwww.rakuten.co.jp%252F%26m%3Dhttp%253A%252F%252Fm.rakuten.co.jp%252F", // 楽天市場 全商品対象（素材064・EPC7.08）
   お名前ドットコム: PENDING,  // 提携済み・リンク未取得
 
   // ===== 申請中（提携申請済み・承認待ち） =====

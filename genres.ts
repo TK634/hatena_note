@@ -236,6 +236,7 @@ export const GENRES: Genre[] = [
       },
       工具・部品: {
         Amazon水回り用品: LINKS.Amazon水回り用品,
+        楽天市場: LINKS.楽天アフィリエイト,
       },
     },
     blog: {
