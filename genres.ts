@@ -49,6 +49,10 @@ export const GENRES: Genre[] = [
       "新NISAの成長投資枠で高配当ETFを買うときの銘柄の選び方",
       "iDeCoとNISAを両方やる場合の毎月の入金額の決め方",
       "投資信託の信託報酬を比較して乗り換えるか判断する基準",
+      "お金の無料相談（FP相談）を受ける前に準備しておくこと【勧誘の断り方も】",
+      "新NISA・iDeCoの相談先の選び方【銀行窓口・FP・無料相談サービスの違い】",
+      "家計相談とFP相談の違いと、自分に合うのはどちらか判断する基準",
+      "新NISAの成長投資枠でアクティブファンドを選ぶときの判断基準",
     ],
     affiliateLinks: {
       証券口座: {
@@ -56,6 +60,19 @@ export const GENRES: Genre[] = [
         SBI証券: LINKS.SBI証券,
         松井証券: LINKS.松井証券,
         松井証券のiDeCo: LINKS.松井証券iDeCo,
+        GMOクリック証券: LINKS.GMOクリック証券,
+        ALTERNA: LINKS.ALTERNA,
+      },
+      投資信託: {
+        ひふみ投信: LINKS.ひふみ投信,
+      },
+      お金の無料相談: {
+        貯蓄の無料相談ガーデン: LINKS.ガーデン,
+        AllAbout家計相談所: LINKS.AllAbout家計相談所,
+        ファインドイットのFP相談: LINKS.ファインドイットFP相談,
+        保険コンパス: LINKS.保険コンパス,
+        マネイロ: LINKS.マネイロ,
+        女性のためのマネーセミナー: LINKS.アットセミナー,
       },
       クレジットカード: {
         楽天カード: LINKS.楽天カード,
