@@ -5,7 +5,7 @@
  */
 import "dotenv/config";
 import { generateArticle } from "./generate.js";
-import { postToHatena } from "./post-hatena.js";
+import { postToHatenaSafely } from "./post-hatena.js";
 import { postToNote } from "./post-note.js";
 import { postToWordPress } from "./post-wordpress.js";
 import { postToTwitter } from "./post-twitter.js";
@@ -15,7 +15,46 @@ import { sendSummaryEmail, type PostResult } from "./notify.js";
 import { resolveArticleUrls } from "./resolve-urls.js";
 import { hasBudgetLeft, getMonthlySpend, MONTHLY_BUDGET_USD } from "./cost-guard.js";
 import { GENRES } from "./genres.js";
+import type { Article } from "./generate.js";
 import * as fs from "fs";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * ネットワークが使えるまで待つ（最大5分）。
+ * スリープ復帰直後は回線が未接続のことがあり、そのまま始めると全ジャンルがタイムアウトする。
+ */
+async function waitForNetwork(maxWaitMs = 5 * 60_000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    try {
+      // 何らかのHTTP応答が返れば回線はつながっている（ステータスは問わない）
+      await fetch("https://api.anthropic.com", { method: "HEAD", signal: AbortSignal.timeout(10_000) });
+      return true;
+    } catch {
+      console.log(`   ⏳ ネットワーク待機中...（${Math.round((Date.now() - start) / 1000)}秒経過）`);
+      await sleep(15_000);
+    }
+  }
+  return false;
+}
+
+/** 記事生成: 通信の一時エラーに備えて最大3回（30秒→60秒の間隔で再試行） */
+async function generateWithRetry(genre: (typeof GENRES)[0]): Promise<Article> {
+  const waits = [30_000, 60_000];
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await generateArticle(genre);
+    } catch (e) {
+      // 予算超過は再試行しても無駄なので即終了
+      if (e instanceof Error && e.name === "BudgetExceededError") throw e;
+      if (attempt > waits.length) throw e;
+      console.warn(`   ⚠ 生成失敗（${attempt}回目）、${waits[attempt - 1] / 1000}秒後に再試行: ${errMsg(e)}`);
+      await sleep(waits[attempt - 1]);
+    }
+  }
+}
 
 async function runGenre(genre: (typeof GENRES)[0]): Promise<PostResult> {
   console.log(`\n${"=".repeat(55)}`);
@@ -24,17 +63,12 @@ async function runGenre(genre: (typeof GENRES)[0]): Promise<PostResult> {
 
   try {
     console.log(`📝 記事を生成中 + OGP画像作成...`);
-    // 一時的なJSON解析エラー等に備えて1回だけリトライ
-    const article = await generateArticle(genre).catch(async (e) => {
-      console.warn(`   ⚠ 生成失敗、30秒後にリトライ: ${e.message}`);
-      await new Promise((r) => setTimeout(r, 30_000));
-      return generateArticle(genre);
-    });
+    const article = await generateWithRetry(genre);
     console.log(`   タイトル: ${article.title}`);
 
     // はてなブログ（必須）
     console.log(`🚀 はてなブログに投稿中...`);
-    const hatenaUrl = await postToHatena(article, genre);
+    const hatenaUrl = await postToHatenaSafely(article, genre);
 
     // note.com
     console.log(`📓 note.com に投稿中...`);
@@ -106,6 +140,14 @@ async function main() {
 
   console.log(`\n対象ジャンル: ${targets.map((g) => g.name).join(", ")}`);
   if (skipIds.length > 0) console.log(`スキップ: ${skipIds.join(", ")}`);
+
+  // スリープ復帰直後は回線が未接続のことがあるため、つながるまで待つ
+  console.log(`\n🌐 ネットワーク接続を確認中...`);
+  if (!(await waitForNetwork())) {
+    console.error(`❌ 5分待ってもネットワークに接続できないため、今回の実行を中止します（API代を無駄にしないため）`);
+    return;
+  }
+  console.log(`   ✅ 接続OK`);
 
   // 前回までに投稿した記事の実URLをRSSから取得してログを補正（内部リンク用）
   console.log(`\n🔗 過去記事のURLを補正中...`);

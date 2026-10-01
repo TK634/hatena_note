@@ -67,6 +67,16 @@ async function fetchRssTitleUrlMap(): Promise<Map<string, string>> {
   return map;
 }
 
+/**
+ * 指定タイトルの記事がブログに公開済みなら、その記事URLを返す（RSS照合）。
+ * 投稿時にタイムアウトしても実際は送信済みのケースがあるため、再送前の重複チェックに使う。
+ * RSS自体が取れない場合は例外を投げる（確認できない＝再送しない判断をさせるため）。
+ */
+export async function findPublishedUrl(title: string): Promise<string | null> {
+  const map = await fetchRssTitleUrlMap();
+  return map.get(normalize(title)) ?? null;
+}
+
 // ===== AtomPub API（全記事・ページ送り） =====
 function buildWsseHeader(): string {
   const nonce = crypto.randomBytes(16);

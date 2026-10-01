@@ -1,7 +1,56 @@
 import type { Article } from "./generate.js";
 import type { Genre } from "./genres.js";
+import { findPublishedUrl } from "./resolve-urls.js";
 import nodemailer from "nodemailer";
 import * as fs from "fs";
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * はてな投稿（重複防止つき）。
+ * 送信エラーでも「実は送信済み」のことがある（2026-10-01の実例: Timeoutでも公開されていた）ため、
+ * 再送する前に必ずRSSで公開済みか確認する。単純な再送は重複投稿になる。
+ * post / confirmWaitMs はテスト用に差し替え可能。
+ */
+export async function postToHatenaSafely(
+  article: Article,
+  genre: Genre,
+  opts: { post?: typeof postToHatena; confirmWaitMs?: number } = {}
+): Promise<string> {
+  const post = opts.post ?? postToHatena;
+  const waitMs = opts.confirmWaitMs ?? 60_000;
+  const confirmPublished = async (): Promise<string | null> => {
+    await new Promise((r) => setTimeout(r, waitMs)); // はてな側のメール取り込み待ち
+    return findPublishedUrl(article.title); // RSSが取れなければ例外＝再送しない
+  };
+
+  try {
+    return await post(article, genre);
+  } catch (e) {
+    console.warn(`   ⚠ 投稿エラー（${errMsg(e)}）。送信済みか${waitMs / 1000}秒後にRSSで確認します`);
+    let url: string | null;
+    try {
+      url = await confirmPublished();
+    } catch (e2) {
+      throw new Error(`投稿エラー後、公開確認もできず（重複を避けるため再送せず）: ${errMsg(e)} / ${errMsg(e2)}`);
+    }
+    if (url) {
+      console.log(`   ✅ 実際には公開済みでした: ${url}`);
+      return url;
+    }
+    console.warn(`   ↻ 未公開を確認。1回だけ再送信します`);
+    try {
+      return await post(article, genre);
+    } catch (e3) {
+      const url2 = await confirmPublished().catch(() => null);
+      if (url2) {
+        console.log(`   ✅ 再送信はエラーでしたが公開済みでした: ${url2}`);
+        return url2;
+      }
+      throw e3;
+    }
+  }
+}
 
 export async function postToHatena(article: Article, genre: Genre): Promise<string> {
   const hatenaEmail = genre.blog.hatenaEmail;
@@ -15,6 +64,11 @@ export async function postToHatena(article: Article, genre: Genre): Promise<stri
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD,
     },
+    // 既定値（socketTimeout=10分）だと通信断で長時間ハングするため明示。
+    // タイムアウト後は run-all 側でRSS照合してから再送するので、短めでも重複投稿にはならない。
+    connectionTimeout: 30_000,
+    greetingTimeout: 30_000,
+    socketTimeout: 60_000,
   });
 
   const htmlContent = convertMarkdownToHtml(article.content);
