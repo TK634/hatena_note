@@ -39,6 +39,9 @@ const BLOG_IDENTITY = `【このブログの一貫した人格（全ジャンル
 - どんなテーマも「自分や家族の"暮らしとお金"」に必ず引きつける。例: 美容・健康の記事でも「かけた金額・コスパ・続けやすさ・節約」の観点を必ず1つ以上入れる。
 - 量産テンプレ感・煽り・誇大を出さない。読者が「この人が実際にやったんだな」と感じる密度を優先。`;
 
+/** 記事冒頭の広告表記 */
+export const PR_NOTICE = "※本記事はプロモーション（広告）を含みます。";
+
 interface LogEntry { genreId: string; title: string }
 
 /** post-log.json から同ジャンルの既存タイトルを取得（重複回避プロンプト用） */
@@ -249,6 +252,10 @@ export async function generateArticle(genre: Genre, customTopic?: string): Promi
   }
 
   const article: Article = { ...parsed, genreId: genre.id };
+
+  // 広告表記（景品表示法のステマ規制・2023年10月施行。ASP規約でも必須）。
+  // 読者が最初に目にする記事冒頭に入れる。
+  article.content = `${PR_NOTICE}\n\n${article.content}`;
 
   // 重複ガード: 生成タイトルが既存とほぼ同一なら警告（実行サマリーで気づけるように）
   const normNew = normalizeTitle(article.title);

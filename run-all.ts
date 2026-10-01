@@ -14,7 +14,7 @@ import { postToInstagram } from "./post-instagram.js";
 import { sendSummaryEmail, type PostResult } from "./notify.js";
 import { resolveArticleUrls } from "./resolve-urls.js";
 import { hasBudgetLeft, getMonthlySpend, MONTHLY_BUDGET_USD } from "./cost-guard.js";
-import { GENRES } from "./genres.js";
+import { GENRES, pickTodaysGenres } from "./genres.js";
 import type { Article } from "./generate.js";
 import * as fs from "fs";
 
@@ -136,7 +136,10 @@ async function main() {
   }
 
   const skipIds = (process.env.SKIP_GENRES ?? "").split(",").filter(Boolean);
-  const targets = GENRES.filter((g) => !skipIds.includes(g.id));
+  const enabled = GENRES.filter((g) => !skipIds.includes(g.id));
+  // 1日の投稿本数（既定1。POSTS_PER_DAY=4 で以前の全ジャンル投稿に戻せる）
+  const perDay = Math.max(1, Number(process.env.POSTS_PER_DAY) || 1);
+  const targets = pickTodaysGenres(enabled, perDay);
 
   console.log(`\n対象ジャンル: ${targets.map((g) => g.name).join(", ")}`);
   if (skipIds.length > 0) console.log(`スキップ: ${skipIds.join(", ")}`);

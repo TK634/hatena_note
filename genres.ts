@@ -279,3 +279,13 @@ export function getTopicForGenre(genre: Genre): string {
   );
   return genre.topics[dayOfYear % genre.topics.length];
 }
+
+/**
+ * その日に投稿するジャンルを選ぶ（量より質へ: 既定は1日1本、ジャンルを日替わりで回す）。
+ * perDay がジャンル数以上なら全ジャンル。日付は日本時間で判定する。
+ */
+export function pickTodaysGenres(genres: Genre[], perDay: number, now = new Date()): Genre[] {
+  if (genres.length <= perDay) return genres;
+  const jstDay = Math.floor((now.getTime() + 9 * 3600_000) / 86400_000);
+  return Array.from({ length: perDay }, (_, i) => genres[(jstDay * perDay + i) % genres.length]);
+}
